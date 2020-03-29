@@ -11,7 +11,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='binx-io-og-image-generator',
+    name='binx-og-image-generator',
     version="0.1.4",
     url='https://github.com/binxio/og-image-generator',
     license='BSD',
