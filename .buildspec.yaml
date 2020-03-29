@@ -1,0 +1,11 @@
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+      python: 3.7
+    commands:
+      - pipenv update -d
+      - git checkout Pipfile.lock
+  build:
+    commands:
+      - make upload-dist
