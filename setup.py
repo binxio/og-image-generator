@@ -24,7 +24,7 @@ setup(
     packages=find_packages(where='src'),
     package_data={
         # If any package contains .png or .ttf file,include them
-        "": ["*.ttf", "*.png"],
+        "": ["fonts/*", "images/*"],
     },
     include_package_data=True,
     zip_safe=False,
