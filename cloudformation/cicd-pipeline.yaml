@@ -22,7 +22,7 @@ Resources:
             Type: PARAMETER_STORE
       Source:
         Type: GITHUB
-        Location: https://github.com/binxio/binx-og-image-generator.git
+        Location: https://github.com/binxio/og-image-generator.git
         BuildSpec: .buildspec.yaml
         GitCloneDepth: 0
       Triggers:
