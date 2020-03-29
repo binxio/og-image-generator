@@ -12,9 +12,9 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='binx-og-image-generator',
-    version="0.2.1",
+    version="0.2.2",
     url='https://github.com/binxio/og-image-generator',
-    license=None,
+    license="restricted",
     author='Mark van Holsteijn',
     author_email='mark@binx.io',
     description='generates og image for the binx.io blog',
@@ -24,7 +24,7 @@ setup(
     packages=find_packages(where='src'),
     package_data={
         # If any package contains .png or .ttf file,include them
-        "": ["fonts/*", "images/*"],
+        "binx-og-image-generator": ["fonts/*", "images/*"],
     },
     include_package_data=True,
     zip_safe=False,
@@ -49,7 +49,6 @@ setup(
         # 'Development Status :: 7 - Inactive',
         'Environment :: Console',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: BSD License',
         'Operating System :: POSIX',
         'Operating System :: MacOS',
         'Operating System :: Unix',
