@@ -37,7 +37,7 @@ def _write_subtitle(img, text):
     width, height = img.size
     draw = ImageDraw.Draw(img)
     x, y = (32, int(height * 0.45))
-    font = ImageFont.truetype(os.path.join(data_dir, 'fonts', 'Ubuntu-B.ttf'), 36)
+    font = ImageFont.truetype(os.path.join(data_dir, 'fonts', 'Ubuntu-M.ttf'), 36)
     width, height = font.getsize(text)
     lines = textwrap.wrap(text, width=50)
     for line in lines:
@@ -48,7 +48,7 @@ def _write_subtitle(img, text):
 def _write_author(img, text):
     width, height = img.size
     draw = ImageDraw.Draw(img)
-    font = ImageFont.truetype(os.path.join(data_dir, 'fonts', 'Ubuntu-L.ttf'), 36)
+    font = ImageFont.truetype(os.path.join(data_dir, 'fonts', 'Ubuntu-M.ttf'), 36)
     _, font_height = font.getsize(text)
     lines = textwrap.wrap(text, width=36)
     draw.text((32 + 220 + 16, height - 32 - 16 - font_height), text, font=font, fill=(255,255,255))

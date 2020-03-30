@@ -7,7 +7,7 @@ Resources:
       Description: 'binx-og-image-generator builder'
       ServiceRole: !Ref 'ProjectRole'
       Artifacts:
-        Type: no_artifacts
+        Type: NO_ARTIFACTS
       Environment:
         Type: LINUX_CONTAINER
         ComputeType: BUILD_GENERAL1_SMALL
