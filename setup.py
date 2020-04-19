@@ -26,7 +26,6 @@ setup(
         # If any package contains .png or .ttf file,include them
         "binx-og-image-generator": ["fonts/*", "images/*"],
     },
-    include_package_data=True,
     zip_safe=False,
     platforms='any',
     install_requires=dependencies,
