@@ -14,7 +14,7 @@ Blog = namedtuple("Blog", "title subtitle author")
 
 
 def _mask(img):
-    gradient_magnitude = 0.66
+    gradient_magnitude = 0.90
     if img.mode != "RGBA":
         img = img.convert("RGBA")
     width, height = img.size
