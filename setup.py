@@ -24,8 +24,9 @@ setup(
     packages=find_packages(where='src'),
     package_data={
         # If any package contains .png or .ttf file,include them
-        "binx-og-image-generator": ["fonts/*", "images/*"],
+        "binx_og_image_generator": ["fonts/*", "images/*"],
     },
+    #include_package_data = True, # does not work if you set it.
     zip_safe=False,
     platforms='any',
     install_requires=dependencies,

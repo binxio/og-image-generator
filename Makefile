@@ -6,6 +6,8 @@ help:           ## Show this help.
 	@fgrep -h "##" $(MAKEFILE_LIST) | grep -v fgrep | sed -e 's/\([^:]*\):[^#]*##\(.*\)/printf '"'%-20s - %s\\\\n' '\1' '\2'"'/' |bash
 
 pre-build:
+	rm -rf build/*
+	find src -type d -name \*.egg-info | xargs rm -rf
 	pipenv run python setup.py check
 	pipenv run python setup.py build
 
@@ -15,7 +17,7 @@ upload-dist:		## to pypi
 	pipenv run twine upload dist/*
 
 clean:		## all intermediate files
-	rm -rf target
+	rm -rf target build/* dist/*
 	find . -name \*.pyc | xargs rm 
 	find src -type d -name \*.egg-info | xargs rm -rf
 
