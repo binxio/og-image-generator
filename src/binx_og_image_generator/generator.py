@@ -57,8 +57,9 @@ def _write_author(img, text):
     font = ImageFont.truetype(os.path.join(data_dir, "fonts", "Ubuntu-M.ttf"), 36)
     _, font_height = font.getsize(text)
     lines = textwrap.wrap(text, width=36)
+    print(font_height)
     draw.text(
-        (32 + 220 + 16, height - 32 - 16 - font_height),
+        (32 + 220 + 16, height - 36 - 16 - 36),
         text,
         font=font,
         fill=(255, 255, 255),
