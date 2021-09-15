@@ -1,3 +1,14 @@
+# Prerequisites
+- Python 3.7
+- Pipenv
+
+
+# Steps to use the OG Image Generator
+- pip install pipenv
+- pipenv shell
+- pipenv install
+- binx-og-image-generator banner.jpg --title "foo" --subtitle "bar" --author "binx consultant"
+
 # binx.io og image generator
 
 utility to generate the binx.io social image for a blog.
