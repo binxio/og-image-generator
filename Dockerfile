@@ -10,5 +10,5 @@ RUN mkdir /images
 
 WORKDIR /images
 
-CMD ["sh", "-c", "binx-og-image-generator ${imagename} --title \"${title}\" --subtitle \"${subtitle}\" --author \"${author}\""]
+ENTRYPOINT [ "binx-og-image-generator" ]
 

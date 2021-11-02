@@ -2,26 +2,34 @@
 
 The binx-og-image-generator is a tool to generate images for your blog.
 
-## Docker
-To use docker to generate images follow these steps:
+```
+Usage: binx-og-image-generator [OPTIONS] IMAGE
 
-Build the docker image
-```console
-docker build -t binx-og-image-generator .
+  generate an og image for blog
+
+Options:
+  --title TEXT     of the blog  [required]
+  --subtitle TEXT  of the blog  [required]
+  --author TEXT    of the blog  [required]
+  --output TEXT    filename of the image  [required]
+  --help           Show this message and exit.
 ```
 
-Generate the images for your blog
+
+To generate an images, type:
+
 ```console
 docker run -it --rm \
-    -v `pwd`:/images \
-    -e title="foo" \
-    -e subtitle="bar" \
-    -e author="binx consultant" \
-    -e imagename="banner.jpg" \
-    binx-og-image-generator
+    -v $PWD:$PWD \
+    -w $PWD \
+    ghcr.io/binxio/og-image-generator \
+    --title "foo" \
+    --subtitle "bar" \
+    --author "binx consultant" \
+    ./banner.jpg
 ```
 
-The generated image can be found in `pwd` (current directory)
+The generated image can be found in your current directory and is named `og-banner.jpg`.
 
 ## Pipenv
 If you which to install the binx-og-image-generator on your host machine follow these steps.
@@ -35,22 +43,5 @@ If you which to install the binx-og-image-generator on your host machine follow 
 - pip install pipenv
 - pipenv shell
 - pipenv install
-- binx-og-image-generator banner.jpg --title "foo" --subtitle "bar" --author "binx consultant"
-
-## binx.io og image generator
-
-utility to generate the binx.io social image for a blog.
-
-```
-Usage: binx-og-image-generator [OPTIONS] IMAGE
-
-  generate an og image for blog
-
-Options:
-  --title TEXT     of the blog  [required]
-  --subtitle TEXT  of the blog  [required]
-  --author TEXT    of the blog  [required]
-  --output TEXT    filename of the image  [required]
-  --help           Show this message and exit.
-```
+- binx-og-image-generator --title "foo" --subtitle "bar" --author "binx consultant" banner.jpg
 
