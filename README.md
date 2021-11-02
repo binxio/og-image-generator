@@ -19,7 +19,7 @@ Options:
 To generate an images, type:
 
 ```console
-docker run -it --rm \
+docker run --rm \
     -v $PWD:$PWD \
     -w $PWD \
     ghcr.io/binxio/og-image-generator \
