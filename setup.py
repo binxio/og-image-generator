@@ -12,7 +12,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='binx-og-image-generator',
-    version="0.2.9",
+    version="0.2.10",
     url='https://github.com/binxio/og-image-generator',
     license="restricted",
     author='Mark van Holsteijn',
