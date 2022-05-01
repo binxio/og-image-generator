@@ -30,7 +30,7 @@ setup(
     zip_safe=False,
     platforms='any',
     install_requires=dependencies,
-    setup_requires=['twine>=3.0.0'],
+    setup_requires=['twine>=4.0.0'],
     tests_require=dependencies +  ['pytest', 'pytest-runner'],
     test_suite='tests',
     entry_points={
