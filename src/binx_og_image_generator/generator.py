@@ -81,12 +81,6 @@ def generate(
 ):
     img = Image.open(in_file)
     width, height = img.size
-    if height < 630:
-        log.error(f"height must at least 630, this image is {width}x{height}")
-        exit(1)
-    if width < 1200:
-        log.error(f"width must at least 1200, this image is {width}x{height}")
-        exit(1)
 
     if resize:
         log.info(
