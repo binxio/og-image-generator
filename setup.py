@@ -12,7 +12,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='binx-og-image-generator',
-    version="0.3.0",
+    version="0.3.1",
     url='https://github.com/binxio/og-image-generator',
     license="restricted",
     author='Mark van Holsteijn',
@@ -30,7 +30,7 @@ setup(
     zip_safe=False,
     platforms='any',
     install_requires=dependencies,
-    setup_requires=['twine'],
+    setup_requires=['twine>=3.0.0'],
     tests_require=dependencies +  ['pytest', 'pytest-runner'],
     test_suite='tests',
     entry_points={
