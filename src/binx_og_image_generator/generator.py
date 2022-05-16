@@ -57,7 +57,7 @@ def _write_author(img, text):
     font = ImageFont.truetype(os.path.join(data_dir, "fonts", "Ubuntu-M.ttf"), 36)
     lines = textwrap.wrap(text, width=36)
     draw.text(
-        (32 + 220 + 16, height - 36 - 16 - 36),
+        (32 + 247 + 16, height - 36 - 16 - 32),
         text,
         font=font,
         fill=(255, 255, 255),
@@ -67,7 +67,7 @@ def _write_author(img, text):
 def _write_logo(img):
     x, y = img.size
     logo = Image.open(os.path.join(data_dir, "images", "binx-logo-white.png"))
-    logo = logo.resize((220, 65))
+    logo = logo.resize((247, 65))
     img.paste(logo, (32, y - 32 - logo.size[1]), logo)
 
 
