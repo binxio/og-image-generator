@@ -13,7 +13,7 @@ data_dir = os.path.dirname(__file__)
 Blog = namedtuple("Blog", "title subtitle author")
 
 
-def _mask(img, gradient_magnitude:float):
+def _mask(img, gradient_magnitude: float):
     if img.mode != "RGBA":
         img = img.convert("RGBA")
     width, height = img.size
@@ -71,26 +71,48 @@ def _write_logo(img):
     img.paste(logo, (32, y - 32 - logo.size[1]), logo)
 
 
-def generate(
-    blog: Blog,
-    in_file: str,
-    out_file: str,
-    resize: bool = False,
-    overwrite: bool = False,
-    gradient_magnitude: float = 0.9,
-):
-    img = Image.open(in_file)
-    width, height = img.size
+def resize_image(image: Image) -> Image:
+    """
+    resize the image to be the perfect og image size: 1200x630px
+    """
+    width, height = image.size
+    if width != 1200:
+        new_height = int(height * 1200 / width)
+        log.info("resizing %dx%d to %dx%d", width, height, 1200, new_height)
+        image = image.resize((1200, new_height))
+        width = 1200
+        width, height = image.size
 
-    if resize:
+    if height > 630:
+        log.info("cropping to maximum height of 630px")
+        top = int((height - 630) / 2)
+        bottom = 630 + top
+        image = image.crop((0, top, 1200, bottom))
+        width, height = image.size
+
+    if height < 630:
         log.info(
             "resizing %dx%d to 1200x630, ratio match %d%%",
             width,
             height,
             int((width / height) / (1200 / 630) * 100),
         )
-        img = img.resize((1200, 630))
+        new_image = Image.new("RGBA", (1200, 630), (255, 0, 0, 0))
+        new_image.paste(image, (0, int((630 - height) / 2)))
+        image = new_image
 
+    return image
+
+
+def generate(
+    blog: Blog,
+    in_file: str,
+    out_file: str,
+    overwrite: bool = False,
+    gradient_magnitude: float = 0.9,
+):
+    img = Image.open(in_file)
+    img = resize_image(img)
     img = _mask(img, gradient_magnitude)
     log.info("add logo")
     _write_logo(img)
@@ -129,18 +151,14 @@ def generate(
 @click.option(
     "--overwrite/--no-overwrite", required=False, default=False, help="output file"
 )
-@click.option(
-    "--resize/--no-resize", is_flag=True, default=True, help="to 1200x630 pixels"
-)
 @click.argument("image", type=click.Path(dir_okay=False, exists=True), nargs=1)
-def main(title, subtitle, author, output, image, resize, overwrite, gradient_magnitude):
+def main(title, subtitle, author, output, image, overwrite, gradient_magnitude):
     overwrite = overwrite or output
     blog = Blog(title, subtitle, author)
     generate(
         blog,
         in_file=image,
         out_file=output,
-        resize=resize,
         overwrite=overwrite,
         gradient_magnitude=gradient_magnitude,
     )
