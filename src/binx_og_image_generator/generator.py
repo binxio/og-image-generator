@@ -180,7 +180,7 @@ def generate(
     "--brand",
     type=click.Choice(["xebia.com", "binx.io"]),
     required=True,
-    default="xebia",
+    default="xebia.com",
     help="of the blog",
 )
 @click.argument("image", type=click.Path(dir_okay=False, exists=True), nargs=1)
