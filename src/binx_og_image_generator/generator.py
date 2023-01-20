@@ -3,7 +3,7 @@ import click
 from collections import namedtuple
 from PIL import Image
 from PIL import ImageFont
-from PIL import ImageDraw
+from PIL import ImageDraw, ImageColor
 import sys
 from .logger import log
 import textwrap
@@ -16,14 +16,14 @@ Blog = namedtuple("Blog", "title subtitle author")
 class Generator:
     def __init__(self, brand: str):
         self.medium_font = (
-            "Ubuntu-M.ttf" if brand == "binx.io" else "Proxima-Nova-M.ttf"
+            "Ubuntu-M.ttf" if brand == "binx.io" else "proximanova-medium.ttf"
         )
-        self.bold_font = "Ubuntu-B.ttf" if brand == "binx.io" else "Proxima-Nova-B.ttf"
+        self.bold_font = "Ubuntu-B.ttf" if brand == "binx.io" else "proximanova-bold.ttf"
         self.logo = Image.open(
             os.path.join(
                 data_dir,
                 "images",
-                "binx-logo-white.png" if brand == "binx.io" else "xebia-logo.png",
+                "binx-logo-white.png" if brand == "binx.io" else "xebia-logo-purple.png",
             )
         )
         self.brand = brand
@@ -68,18 +68,31 @@ class Generator:
         draw = ImageDraw.Draw(img)
         font = ImageFont.truetype(os.path.join(data_dir, "fonts", self.medium_font), 36)
         lines = textwrap.wrap(text, width=36)
-        draw.text(
-            (32 + 247 + 16, height - 36 - 16 - 32),
-            text,
-            font=font,
-            fill=(255, 255, 255),
-        )
+        if self.brand == "binx.io":
+            draw.text(
+                (32 + 247 + 16, height - 36 - 16 - 32),
+                text,
+                font=font,
+                fill=(255, 255, 255),
+            )
+        else:
+            draw.text(
+                (32, height - 36 - 16 - 32),
+                text,
+                font=font,
+                fill=(255, 255, 255),
+            )
+
 
     def _write_logo(self, img):
         x, y = img.size
         logo_x, logo_y = self.logo.size
         logo = self.logo.resize((247, int(247 / logo_x * logo_y)))
-        img.paste(logo, (32, y - 32 - logo.size[1]), logo)
+        if self.brand == "binx.io":
+            img.paste(logo, (32, y - 32 - logo.size[1]), logo)
+        else:
+            img.paste(logo, (x - 247 - 32, y - 32 - logo.size[1]), logo)
+
 
     def generate(
         self,
