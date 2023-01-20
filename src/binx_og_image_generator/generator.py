@@ -14,11 +14,18 @@ Blog = namedtuple("Blog", "title subtitle author")
 
 
 class Generator:
-
     def __init__(self, brand: str):
-        self.medium_font = "Ubuntu-M.ttf" if brand == "binx.io" else "Proxima-Nova-M.ttf"
+        self.medium_font = (
+            "Ubuntu-M.ttf" if brand == "binx.io" else "Proxima-Nova-M.ttf"
+        )
         self.bold_font = "Ubuntu-B.ttf" if brand == "binx.io" else "Proxima-Nova-B.ttf"
-        self.logo = Image.open(os.path.join(data_dir, "images","binx-logo-white.png" if brand == "binx.io" else "xebia-logo.png"))
+        self.logo = Image.open(
+            os.path.join(
+                data_dir,
+                "images",
+                "binx-logo-white.png" if brand == "binx.io" else "xebia-logo.png",
+            )
+        )
         self.brand = brand
 
     def _mask(self, img, gradient_magnitude: float):
@@ -45,7 +52,6 @@ class Generator:
             draw.text((x, y), line, font=font, fill=(255, 255, 255))
             y += height
 
-
     def _write_subtitle(self, img, text):
         width, height = img.size
         draw = ImageDraw.Draw(img)
@@ -56,7 +62,6 @@ class Generator:
         for line in lines:
             draw.text((x, y), line, font=font, fill=(255, 255, 255))
             y += height
-
 
     def _write_author(self, img, text):
         width, height = img.size
@@ -70,19 +75,19 @@ class Generator:
             fill=(255, 255, 255),
         )
 
-
     def _write_logo(self, img):
         x, y = img.size
         logo_x, logo_y = self.logo.size
-        logo = self.logo.resize((247, int(247/logo_x * logo_y)))
+        logo = self.logo.resize((247, int(247 / logo_x * logo_y)))
         img.paste(logo, (32, y - 32 - logo.size[1]), logo)
 
-    def generate(self,
-            blog: Blog,
-            in_file: str,
-            out_file: str,
-            overwrite: bool = False,
-            gradient_magnitude: float = 0.9,
+    def generate(
+        self,
+        blog: Blog,
+        in_file: str,
+        out_file: str,
+        overwrite: bool = False,
+        gradient_magnitude: float = 0.9,
     ):
         img = Image.open(in_file)
         img = resize_image(img)
@@ -104,12 +109,13 @@ class Generator:
             log.error("%s already exists, and no --overwrite was specified", out_file)
             return
 
-        if img.mode != "RGB" and (out_file.endswith(".jpg") or out_file.endswith(".jpeg")):
+        if img.mode != "RGB" and (
+            out_file.endswith(".jpg") or out_file.endswith(".jpeg")
+        ):
             img = img.convert("RGB")
 
         img.save(out_file)
         log.info("og image saved to %s", out_file)
-
 
 
 def resize_image(image: Image) -> Image:
@@ -145,21 +151,16 @@ def resize_image(image: Image) -> Image:
     return image
 
 
-
 def generate(
-        blog: Blog,
-        in_file: str,
-        out_file: str,
-        overwrite: bool = False,
-        gradient_magnitude: float = 0.9,
-        brand: str = "xebia"
+    blog: Blog,
+    in_file: str,
+    out_file: str,
+    overwrite: bool = False,
+    gradient_magnitude: float = 0.9,
+    brand: str = "xebia.com",
 ):
     generator = Generator(brand)
-    generator.generate( blog,
-    in_file,
-    out_file,
-    overwrite,
-    gradient_magnitude)
+    generator.generate(blog, in_file, out_file, overwrite, gradient_magnitude)
 
 
 @click.command(help="generate an og image for blog")
@@ -175,8 +176,13 @@ def generate(
 @click.option(
     "--overwrite/--no-overwrite", required=False, default=False, help="output file"
 )
-@click.option("--brand",  type=click.Choice(['xebia', 'binx.io']), required=True, default="xebia", help="of the blog")
-
+@click.option(
+    "--brand",
+    type=click.Choice(["xebia.com", "binx.io"]),
+    required=True,
+    default="xebia",
+    help="of the blog",
+)
 @click.argument("image", type=click.Path(dir_okay=False, exists=True), nargs=1)
 def main(title, subtitle, author, output, image, overwrite, gradient_magnitude, brand):
     overwrite = overwrite or output
@@ -187,4 +193,5 @@ def main(title, subtitle, author, output, image, overwrite, gradient_magnitude, 
         out_file=output,
         overwrite=overwrite,
         gradient_magnitude=gradient_magnitude,
+        brand=brand,
     )
