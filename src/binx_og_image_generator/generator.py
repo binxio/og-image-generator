@@ -13,62 +13,103 @@ data_dir = os.path.dirname(__file__)
 Blog = namedtuple("Blog", "title subtitle author")
 
 
-def _mask(img, gradient_magnitude: float):
-    if img.mode != "RGBA":
-        img = img.convert("RGBA")
-    width, height = img.size
-    gradient = Image.new("L", (width, 1), color=0xFF)
-    for x in range(width):
-        gradient.putpixel(
-            (x, 0), int(255 * (1 - gradient_magnitude * float(x) / width))
+class Generator:
+
+    def __init__(self, brand: str):
+        self.medium_font = "Ubuntu-M.ttf" if brand == "binx.io" else "Proxima-Nova-M.ttf"
+        self.bold_font = "Ubuntu-B.ttf" if brand == "binx.io" else "Proxima-Nova-B.ttf"
+        self.logo = Image.open(os.path.join(data_dir, "images","binx-logo-white.png" if brand == "binx.io" else "xebia-logo.png"))
+        self.brand = brand
+
+    def _mask(self, img, gradient_magnitude: float):
+        if img.mode != "RGBA":
+            img = img.convert("RGBA")
+        width, height = img.size
+        gradient = Image.new("L", (width, 1), color=0xFF)
+        for x in range(width):
+            gradient.putpixel(
+                (x, 0), int(255 * (1 - gradient_magnitude * float(x) / width))
+            )
+        alpha = gradient.resize(img.size)
+        black_img = Image.new("RGBA", (width, height), color=0)  # i.e. black
+        black_img.putalpha(alpha)
+        return Image.alpha_composite(img, black_img)
+
+    def _write_title(self, img, text):
+        x, y = (32, 32)
+        draw = ImageDraw.Draw(img)
+        font = ImageFont.truetype(os.path.join(data_dir, "fonts", self.bold_font), 64)
+        width, height = font.getsize(text)
+        lines = textwrap.wrap(text, width=32)
+        for line in lines:
+            draw.text((x, y), line, font=font, fill=(255, 255, 255))
+            y += height
+
+
+    def _write_subtitle(self, img, text):
+        width, height = img.size
+        draw = ImageDraw.Draw(img)
+        x, y = (32, int(height * 0.45))
+        font = ImageFont.truetype(os.path.join(data_dir, "fonts", self.medium_font), 36)
+        width, height = font.getsize(text)
+        lines = textwrap.wrap(text, width=50)
+        for line in lines:
+            draw.text((x, y), line, font=font, fill=(255, 255, 255))
+            y += height
+
+
+    def _write_author(self, img, text):
+        width, height = img.size
+        draw = ImageDraw.Draw(img)
+        font = ImageFont.truetype(os.path.join(data_dir, "fonts", self.medium_font), 36)
+        lines = textwrap.wrap(text, width=36)
+        draw.text(
+            (32 + 247 + 16, height - 36 - 16 - 32),
+            text,
+            font=font,
+            fill=(255, 255, 255),
         )
-    alpha = gradient.resize(img.size)
-    black_img = Image.new("RGBA", (width, height), color=0)  # i.e. black
-    black_img.putalpha(alpha)
-    return Image.alpha_composite(img, black_img)
 
 
-def _write_title(img, text):
-    x, y = (32, 32)
-    draw = ImageDraw.Draw(img)
-    font = ImageFont.truetype(os.path.join(data_dir, "fonts", "Ubuntu-B.ttf"), 64)
-    width, height = font.getsize(text)
-    lines = textwrap.wrap(text, width=32)
-    for line in lines:
-        draw.text((x, y), line, font=font, fill=(255, 255, 255))
-        y += height
+    def _write_logo(self, img):
+        x, y = img.size
+        logo_x, logo_y = self.logo.size
+        logo = self.logo.resize((247, int(247/logo_x * logo_y)))
+        img.paste(logo, (32, y - 32 - logo.size[1]), logo)
 
+    def generate(self,
+            blog: Blog,
+            in_file: str,
+            out_file: str,
+            overwrite: bool = False,
+            gradient_magnitude: float = 0.9,
+    ):
+        img = Image.open(in_file)
+        img = resize_image(img)
+        img = self._mask(img, gradient_magnitude)
+        log.info("add logo")
+        self._write_logo(img)
+        log.info("add title")
+        self._write_title(img, blog.title)
+        log.info("add subtitle")
+        self._write_subtitle(img, blog.subtitle)
+        log.info("add author")
+        self._write_author(img, blog.author)
+        if not out_file:
+            out_file = os.path.join(
+                os.path.dirname(in_file), "og-" + os.path.basename(in_file)
+            )
 
-def _write_subtitle(img, text):
-    width, height = img.size
-    draw = ImageDraw.Draw(img)
-    x, y = (32, int(height * 0.45))
-    font = ImageFont.truetype(os.path.join(data_dir, "fonts", "Ubuntu-M.ttf"), 36)
-    width, height = font.getsize(text)
-    lines = textwrap.wrap(text, width=50)
-    for line in lines:
-        draw.text((x, y), line, font=font, fill=(255, 255, 255))
-        y += height
+        if os.path.exists(out_file) and not overwrite:
+            log.error("%s already exists, and no --overwrite was specified", out_file)
+            return
 
+        if img.mode != "RGB" and (out_file.endswith(".jpg") or out_file.endswith(".jpeg")):
+            img = img.convert("RGB")
 
-def _write_author(img, text):
-    width, height = img.size
-    draw = ImageDraw.Draw(img)
-    font = ImageFont.truetype(os.path.join(data_dir, "fonts", "Ubuntu-M.ttf"), 36)
-    lines = textwrap.wrap(text, width=36)
-    draw.text(
-        (32 + 247 + 16, height - 36 - 16 - 32),
-        text,
-        font=font,
-        fill=(255, 255, 255),
-    )
+        img.save(out_file)
+        log.info("og image saved to %s", out_file)
 
-
-def _write_logo(img):
-    x, y = img.size
-    logo = Image.open(os.path.join(data_dir, "images", "binx-logo-white.png"))
-    logo = logo.resize((247, 65))
-    img.paste(logo, (32, y - 32 - logo.size[1]), logo)
 
 
 def resize_image(image: Image) -> Image:
@@ -104,38 +145,21 @@ def resize_image(image: Image) -> Image:
     return image
 
 
+
 def generate(
-    blog: Blog,
-    in_file: str,
-    out_file: str,
-    overwrite: bool = False,
-    gradient_magnitude: float = 0.9,
+        blog: Blog,
+        in_file: str,
+        out_file: str,
+        overwrite: bool = False,
+        gradient_magnitude: float = 0.9,
+        brand: str = "xebia"
 ):
-    img = Image.open(in_file)
-    img = resize_image(img)
-    img = _mask(img, gradient_magnitude)
-    log.info("add logo")
-    _write_logo(img)
-    log.info("add title")
-    _write_title(img, blog.title)
-    log.info("add subtitle")
-    _write_subtitle(img, blog.subtitle)
-    log.info("add author")
-    _write_author(img, blog.author)
-    if not out_file:
-        out_file = os.path.join(
-            os.path.dirname(in_file), "og-" + os.path.basename(in_file)
-        )
-
-    if os.path.exists(out_file) and not overwrite:
-        log.error("%s already exists, and no --overwrite was specified", out_file)
-        return
-
-    if img.mode != "RGB" and (out_file.endswith(".jpg") or out_file.endswith(".jpeg")):
-        img = img.convert("RGB")
-
-    img.save(out_file)
-    log.info("og image saved to %s", out_file)
+    generator = Generator(brand)
+    generator.generate( blog,
+    in_file,
+    out_file,
+    overwrite,
+    gradient_magnitude)
 
 
 @click.command(help="generate an og image for blog")
@@ -151,8 +175,10 @@ def generate(
 @click.option(
     "--overwrite/--no-overwrite", required=False, default=False, help="output file"
 )
+@click.option("--brand",  type=click.Choice(['xebia', 'binx.io']), required=True, default="xebia", help="of the blog")
+
 @click.argument("image", type=click.Path(dir_okay=False, exists=True), nargs=1)
-def main(title, subtitle, author, output, image, overwrite, gradient_magnitude):
+def main(title, subtitle, author, output, image, overwrite, gradient_magnitude, brand):
     overwrite = overwrite or output
     blog = Blog(title, subtitle, author)
     generate(
