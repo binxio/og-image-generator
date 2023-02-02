@@ -19,16 +19,17 @@ Blog = namedtuple("Blog", "title subtitle author email")
 
 
 class Generator:
-    def __init__(self, author:str, title:str, subtitle:str, gradient_magnitude:float = 0.85, email:str=None):
+    def __init__(
+        self,
+        author: str,
+        title: str,
+        subtitle: str,
+        gradient_magnitude: float = 0.85,
+        email: str = None,
+    ):
         self.medium_font = "Ubuntu-M.ttf"
         self.bold_font = "Ubuntu-B.ttf"
-        self.logo = Image.open(
-            os.path.join(
-                data_dir,
-                "images",
-                "binx-logo-white.png"
-            )
-        )
+        self.logo = Image.open(os.path.join(data_dir, "images", "binx-logo-white.png"))
         self.author = author
         self.email = email
         self.title = title
@@ -41,13 +42,7 @@ class BinxGenerator(Generator):
         super().__init__(**kwargs)
         self.medium_font = "Ubuntu-M.ttf"
         self.bold_font = "Ubuntu-B.ttf"
-        self.logo = Image.open(
-            os.path.join(
-                data_dir,
-                "images",
-                "binx-logo-white.png"
-            )
-        )
+        self.logo = Image.open(os.path.join(data_dir, "images", "binx-logo-white.png"))
 
     def _mask(self, img):
         if img.mode != "RGBA":
@@ -95,13 +90,11 @@ class BinxGenerator(Generator):
             fill=(255, 255, 255),
         )
 
-
     def _write_logo(self, img):
         x, y = img.size
         logo_x, logo_y = self.logo.size
         logo = self.logo.resize((247, int(247 / logo_x * logo_y)))
         img.paste(logo, (32, y - 32 - logo.size[1]), logo)
-
 
     def generate(self, img):
         img = self._mask(img)
@@ -111,25 +104,15 @@ class BinxGenerator(Generator):
         self._write_author(img)
         return img
 
+
 class XebiaGenerator(Generator):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.bold_font = "proximanova-bold.ttf"
-        self.logo = Image.open(
-            os.path.join(
-                data_dir,
-                "images",
-                "xebia-logo-white.png"
-            )
-        )
+        self.logo = Image.open(os.path.join(data_dir, "images", "xebia-logo-white.png"))
         self.overlay = Image.open(
-            os.path.join(
-                data_dir,
-                "images",
-                "xebia-overlay-purple.png"
-            )
+            os.path.join(data_dir, "images", "xebia-overlay-purple.png")
         )
-
 
     def _mask(self, img):
         img.paste(self.overlay, (0, 0), self.overlay)
@@ -166,16 +149,22 @@ class XebiaGenerator(Generator):
         logo_x, logo_y = logo.size
         img.paste(logo, (x - logo_x - 32, 35), logo)
 
-
     def _add_profile_picture(self, img):
         if not self.email:
             return
 
-        url = "https://www.gravatar.com/avatar/" + hashlib.md5(self.email.lower().encode('utf8')).hexdigest()
+        url = (
+            "https://www.gravatar.com/avatar/"
+            + hashlib.md5(self.email.lower().encode("utf8")).hexdigest()
+        )
 
         response = requests.get(url, params={"size": 150, "d": "404"})
         if response.status_code != 200:
-            log.warning("failed to retrieve profile image for %s, %s", email, response.status_code)
+            log.warning(
+                "failed to retrieve profile image for %s, %s",
+                email,
+                response.status_code,
+            )
             return
 
         picture = Image.open(BytesIO(response.content))
@@ -183,22 +172,22 @@ class XebiaGenerator(Generator):
             picture = picture.convert("RGB")
 
         image_array = np.array(picture)
-        round_image = Image.new('L', picture.size, 0)
+        round_image = Image.new("L", picture.size, 0)
         draw = ImageDraw.Draw(round_image)
-        draw.pieslice([0, 0, picture.size[0], picture.size[1]], 0, 360, fill = 255)
-        round_image_array = np.array(round_image) #conver to numpy array
-        image_array = np.dstack((image_array, round_image_array)) #add alpha channel to the image
+        draw.pieslice([0, 0, picture.size[0], picture.size[1]], 0, 360, fill=255)
+        round_image_array = np.array(round_image)  # conver to numpy array
+        image_array = np.dstack(
+            (image_array, round_image_array)
+        )  # add alpha channel to the image
         final_image = Image.fromarray(image_array)
 
         x, y = img.size
         img.paste(final_image, (x - 450, y - 220 - 32), final_image)
         return
 
-
-
     def generate(
-            self,
-            img,
+        self,
+        img,
     ):
         img = self._mask(img)
         self._write_logo(img)
@@ -209,6 +198,7 @@ class XebiaGenerator(Generator):
             self._add_profile_picture(img)
 
         return img
+
 
 def resize_image(image: Image) -> Image:
     """
@@ -252,7 +242,11 @@ def generate(
     brand: str = "xebia.com",
 ):
     kwargs = {
-        "title":blog.title, "subtitle":blog.subtitle, "email":blog.email, "author":blog.author, "gradient_magnitude":gradient_magnitude
+        "title": blog.title,
+        "subtitle": blog.subtitle,
+        "email": blog.email,
+        "author": blog.author,
+        "gradient_magnitude": gradient_magnitude,
     }
     if brand == "binx.io":
         generator = BinxGenerator(**kwargs)
@@ -278,7 +272,6 @@ def generate(
     log.info("og image saved to %s", out_file)
 
 
-
 @click.command(help="generate an og image for blog")
 @click.option("--title", required=True, help="of the blog")
 @click.option("--subtitle", required=True, help="of the blog")
@@ -301,17 +294,22 @@ def generate(
     help="of the blog",
 )
 @click.argument("image", type=click.Path(dir_okay=False, exists=True), nargs=1)
-def main(title, subtitle, author, email, output, image, overwrite, gradient_magnitude, brand):
+def main(
+    title, subtitle, author, email, output, image, overwrite, gradient_magnitude, brand
+):
     overwrite = overwrite or output
     blog = Blog(title, subtitle, author, email)
     kwargs = {
-        "title":title, "subtitle":subtitle, "email":email, "author":author, "gradient_magnitude":gradient_magnitude
+        "title": title,
+        "subtitle": subtitle,
+        "email": email,
+        "author": author,
+        "gradient_magnitude": gradient_magnitude,
     }
     if brand == "binx.io":
         generator = BinxGenerator(**kwargs)
     else:
         generator = XebiaGenerator(**kwargs)
-
 
     generate(
         blog,
