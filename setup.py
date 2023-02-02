@@ -3,7 +3,7 @@ The binx.io og image generator
 """
 from setuptools import find_packages, setup
 
-dependencies = ['click', 'pillow']
+dependencies = ['click', 'pillow', 'requests', 'numpy']
 
 from os import path
 this_directory = path.abspath(path.dirname(__file__))
