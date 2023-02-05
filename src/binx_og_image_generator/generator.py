@@ -108,22 +108,25 @@ class BinxGenerator(Generator):
 class XebiaGenerator(Generator):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.medium_font = "proximanova-medium.ttf"
         self.bold_font = "proximanova-bold.ttf"
         self.logo = Image.open(os.path.join(data_dir, "images", "xebia-logo-white.png"))
         self.overlay = Image.open(
             os.path.join(data_dir, "images", "xebia-overlay-purple.png")
         )
+        self.profile_mask = Image.open(os.path.join(data_dir, "images", "profile-mask.png")).convert("L")
+
 
     def _mask(self, img):
         img.paste(self.overlay, (0, 0), self.overlay)
         return img
 
     def _write_title(self, img):
-        x, y = (32, 32)
+        x, y = (75, 140)
         draw = ImageDraw.Draw(img)
-        font = ImageFont.truetype(os.path.join(data_dir, "fonts", self.bold_font), 64)
+        font = ImageFont.truetype(os.path.join(data_dir, "fonts", self.bold_font), 52)
         _, _, width, height = font.getbbox(self.title)
-        lines = textwrap.wrap(self.title, width=24)
+        lines = textwrap.wrap(self.title, width=23)
         for line in lines:
             draw.text((x, y), line, font=font, fill=(255, 255, 255))
             y += height
@@ -133,21 +136,24 @@ class XebiaGenerator(Generator):
         draw = ImageDraw.Draw(img)
         font = ImageFont.truetype(os.path.join(data_dir, "fonts", self.medium_font), 36)
         ascent, descent = font.getmetrics()
+        first_name = self.author.split()[0]
+        last_name = " ".join(self.author.split()[1:])
         text_width = font.getmask(self.author).getbbox()[2]
         text_height = font.getmask(self.author).getbbox()[3] + descent
+        position = (width - 320, height - 170)
         draw.text(
-            (width - text_width - 32, height - 36 - text_height),
-            self.author,
+            position,
+            first_name,
             font=font,
             fill=(255, 255, 255),
         )
 
-    def _write_logo(self, img):
-        x, y = img.size
-        logo_x, logo_y = self.logo.size
-        logo = self.logo.resize((247, int(247 / logo_x * logo_y)))
-        logo_x, logo_y = logo.size
-        img.paste(logo, (x - logo_x - 32, 35), logo)
+        draw.text(
+            (position[0], position[1] + text_height),
+            last_name,
+            font=font,
+            fill=(255, 255, 255),
+        )
 
     def _add_profile_picture(self, img):
         if not self.email:
@@ -158,11 +164,11 @@ class XebiaGenerator(Generator):
             + hashlib.md5(self.email.lower().encode("utf8")).hexdigest()
         )
 
-        response = requests.get(url, params={"size": 150, "d": "404"})
+        response = requests.get(url, params={"size": self.profile_mask.size[0], "d": "404"})
         if response.status_code != 200:
             log.warning(
                 "failed to retrieve profile image for %s, %s",
-                email,
+                self.email,
                 response.status_code,
             )
             return
@@ -171,18 +177,15 @@ class XebiaGenerator(Generator):
         if picture.mode != "RGB":
             picture = picture.convert("RGB")
 
-        image_array = np.array(picture)
-        round_image = Image.new("L", picture.size, 0)
-        draw = ImageDraw.Draw(round_image)
-        draw.pieslice([0, 0, picture.size[0], picture.size[1]], 0, 360, fill=255)
-        round_image_array = np.array(round_image)  # conver to numpy array
+        rgb = np.array(picture)
+        opacity = np.array(self.profile_mask)
         image_array = np.dstack(
-            (image_array, round_image_array)
-        )  # add alpha channel to the image
-        final_image = Image.fromarray(image_array)
+            (rgb, opacity)
+        )
+        final_image = Image.fromarray(image_array).resize(size=(170,170))
 
         x, y = img.size
-        img.paste(final_image, (x - 450, y - 220 - 32), final_image)
+        img.paste(final_image, (x - 532, y - 218), final_image)
         return
 
     def generate(
@@ -190,7 +193,6 @@ class XebiaGenerator(Generator):
         img,
     ):
         img = self._mask(img)
-        self._write_logo(img)
         self._write_title(img)
         self._write_author(img)
 
