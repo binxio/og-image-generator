@@ -114,8 +114,9 @@ class XebiaGenerator(Generator):
         self.overlay = Image.open(
             os.path.join(data_dir, "images", "xebia-overlay-purple.png")
         )
-        self.profile_mask = Image.open(os.path.join(data_dir, "images", "profile-mask.png")).convert("L")
-
+        self.profile_mask = Image.open(
+            os.path.join(data_dir, "images", "profile-mask.png")
+        ).convert("L")
 
     def _mask(self, img):
         img.paste(self.overlay, (0, 0), self.overlay)
@@ -124,7 +125,7 @@ class XebiaGenerator(Generator):
     def _write_title(self, img):
         x, y = (75, 140)
         draw = ImageDraw.Draw(img)
-        font = ImageFont.truetype(os.path.join(data_dir, "fonts", self.bold_font), 52)
+        font = ImageFont.truetype(os.path.join(data_dir, "fonts", self.bold_font), 50)
         _, _, width, height = font.getbbox(self.title)
         lines = textwrap.wrap(self.title, width=23)
         for line in lines:
@@ -164,7 +165,9 @@ class XebiaGenerator(Generator):
             + hashlib.md5(self.email.lower().encode("utf8")).hexdigest()
         )
 
-        response = requests.get(url, params={"size": self.profile_mask.size[0], "d": "404"})
+        response = requests.get(
+            url, params={"size": self.profile_mask.size[0], "d": "404"}
+        )
         if response.status_code != 200:
             log.warning(
                 "failed to retrieve profile image for %s, %s",
@@ -179,10 +182,8 @@ class XebiaGenerator(Generator):
 
         rgb = np.array(picture)
         opacity = np.array(self.profile_mask)
-        image_array = np.dstack(
-            (rgb, opacity)
-        )
-        final_image = Image.fromarray(image_array).resize(size=(170,170))
+        image_array = np.dstack((rgb, opacity))
+        final_image = Image.fromarray(image_array).resize(size=(170, 170))
 
         x, y = img.size
         img.paste(final_image, (x - 532, y - 218), final_image)
