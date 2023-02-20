@@ -119,6 +119,8 @@ class XebiaGenerator(Generator):
         ).convert("L")
 
     def _mask(self, img):
+        if img.mode != "RGB":
+            img = img.convert("RGB")
         img.paste(self.overlay, (0, 0), self.overlay)
         return img
 
@@ -193,6 +195,7 @@ class XebiaGenerator(Generator):
         self,
         img,
     ):
+
         img = self._mask(img)
         self._write_title(img)
         self._write_author(img)
