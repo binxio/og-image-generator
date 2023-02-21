@@ -12,6 +12,7 @@ from PIL import ImageDraw
 from PIL import ImageFont
 
 from .logger import log
+from .gravatar import load_profile_picture
 
 data_dir = os.path.dirname(__file__)
 
@@ -111,17 +112,29 @@ class XebiaGenerator(Generator):
         self.medium_font = "proximanova-medium.ttf"
         self.bold_font = "proximanova-bold.ttf"
         self.logo = Image.open(os.path.join(data_dir, "images", "xebia-logo-white.png"))
-        self.overlay = Image.open(
-            os.path.join(data_dir, "images", "xebia-overlay-purple.png")
-        )
+
         self.profile_mask = Image.open(
             os.path.join(data_dir, "images", "profile-mask.png")
         ).convert("L")
+        self.profile_picture = load_profile_picture(
+            self.email, self.profile_mask.size[0]
+        )
+        self.overlay = Image.open(
+            os.path.join(
+                data_dir,
+                "images",
+                "xebia-overlay-purple.png"
+                if self.profile_picture
+                else "xebia-overlay-purple-no-picture.png",
+            )
+        )
 
     def _mask(self, img):
         if img.mode != "RGB":
             img = img.convert("RGB")
+
         img.paste(self.overlay, (0, 0), self.overlay)
+
         return img
 
     def _write_title(self, img):
@@ -141,7 +154,6 @@ class XebiaGenerator(Generator):
         ascent, descent = font.getmetrics()
         first_name = self.author.split()[0]
         last_name = " ".join(self.author.split()[1:])
-        text_width = font.getmask(self.author).getbbox()[2]
         text_height = font.getmask(self.author).getbbox()[3] + descent
         position = (width - 320, height - 170)
         draw.text(
@@ -159,49 +171,28 @@ class XebiaGenerator(Generator):
         )
 
     def _add_profile_picture(self, img):
-        if not self.email:
+        """
+        adds the profile picture in the shape of self.profile_mask
+        """
+        if not self.profile_picture:
             return
 
-        url = (
-            "https://www.gravatar.com/avatar/"
-            + hashlib.md5(self.email.lower().encode("utf8")).hexdigest()
-        )
-
-        response = requests.get(
-            url, params={"size": self.profile_mask.size[0], "d": "404"}
-        )
-        if response.status_code != 200:
-            log.warning(
-                "failed to retrieve profile image for %s, %s",
-                self.email,
-                response.status_code,
-            )
-            return
-
-        picture = Image.open(BytesIO(response.content))
-        if picture.mode != "RGB":
-            picture = picture.convert("RGB")
-
-        rgb = np.array(picture)
+        rgb = np.array(self.profile_picture)
         opacity = np.array(self.profile_mask)
         image_array = np.dstack((rgb, opacity))
         final_image = Image.fromarray(image_array).resize(size=(170, 170))
 
         x, y = img.size
         img.paste(final_image, (x - 532, y - 218), final_image)
-        return
 
     def generate(
         self,
         img,
     ):
-
         img = self._mask(img)
         self._write_title(img)
         self._write_author(img)
-
-        if self.email:
-            self._add_profile_picture(img)
+        self._add_profile_picture(img)
 
         return img
 

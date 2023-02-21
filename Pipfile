@@ -11,6 +11,7 @@ twine = "*"
 binx_og_image_generator = {editable = true, path = "."}
 click = "*"
 pillow = "*"
+requests = "*"
 
 [requires]
 
