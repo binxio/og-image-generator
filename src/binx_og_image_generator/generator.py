@@ -132,7 +132,7 @@ class XebiaGenerator(Generator):
     def _mask(self, img):
         width, height = img.size
         result = Image.new("RGB", (width, height))
-        result.paste(img.convert("RGB"), (int(width/3), 0))
+        result.paste(img.convert("RGB"), (int(width / 3), 0))
         result.paste(self.overlay, (0, 0), self.overlay)
         return result
 
@@ -221,7 +221,6 @@ def resize_image(image: Image) -> Image:
         new_height = int(height * 1200 / width)
         log.info("resizing %dx%d to %dx%d", width, height, 1200, new_height)
         image = image.resize((1200, new_height))
-        width = 1200
         width, height = image.size
 
     if height > 630:
@@ -238,9 +237,8 @@ def resize_image(image: Image) -> Image:
             height,
             int((width / height) / (1200 / 630) * 100),
         )
-        new_image = Image.new("RGBA", (1200, 630), (255, 0, 0, 0))
-        new_image.paste(image, (0, int((630 - height) / 2)))
-        image = new_image
+
+        image = image.resize((1200, 630))
 
     return image
 
