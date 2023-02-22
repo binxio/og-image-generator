@@ -11,8 +11,8 @@ from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 
-from .logger import log
-from .gravatar import load_profile_picture
+from binx_og_image_generator.logger import log
+from binx_og_image_generator.gravatar import load_profile_picture
 
 data_dir = os.path.dirname(__file__)
 
@@ -147,6 +147,15 @@ class XebiaGenerator(Generator):
             draw.text((x, y), line, font=font, fill=(255, 255, 255))
             y += height
 
+    @staticmethod
+    def max_text_width(font, lines: [str]):
+        result = 0
+        for line in lines:
+            bbox = font.getmask(line).getbbox()
+            width = bbox[2] - bbox[0]
+            result = max(result, width)
+        return result
+
     def _write_author(self, img):
         width, height = img.size
         draw = ImageDraw.Draw(img)
@@ -155,7 +164,14 @@ class XebiaGenerator(Generator):
         first_name = self.author.split()[0]
         last_name = " ".join(self.author.split()[1:])
         text_height = font.getmask(self.author).getbbox()[3] + descent
-        position = (width - 320, height - 170)
+        position = (
+            (width - 320, height - 170)
+            if self.profile_picture
+            else (
+                width - self.max_text_width(font, [first_name, last_name]) - 32,
+                height - 170,
+            )
+        )
         draw.text(
             position,
             first_name,
