@@ -33,6 +33,10 @@ def load_profile_picture(email: str, size: int) -> Optional["Image"]:
         return
 
     profile_picture = Image.open(BytesIO(response.content))
+
+    # gravatar sometimes does not return the requested size
+    if profile_picture.size != (size, size):
+        profile_picture = profile_picture.resize((size, size))
     return (
         profile_picture
         if profile_picture.mode == "RGB"
