@@ -130,12 +130,11 @@ class XebiaGenerator(Generator):
         )
 
     def _mask(self, img):
-        if img.mode != "RGB":
-            img = img.convert("RGB")
-
-        img.paste(self.overlay, (0, 0), self.overlay)
-
-        return img
+        width, height = img.size
+        result = Image.new("RGB", (width, height))
+        result.paste(img.convert("RGB"), (int(width/3), 0))
+        result.paste(self.overlay, (0, 0), self.overlay)
+        return result
 
     def _write_title(self, img):
         x, y = (75, 140)
