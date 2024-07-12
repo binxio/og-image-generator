@@ -35,7 +35,6 @@ The generated image can be found in your current directory and is named `og-bann
 If you which to install the binx-og-image-generator on your host machine follow these steps.
 
 ### Prerequisites
-- Python 3.9
 - Pipenv
 
 
