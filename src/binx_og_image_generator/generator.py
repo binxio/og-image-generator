@@ -1,12 +1,9 @@
-import hashlib
 import os
 import textwrap
 from collections import namedtuple
-from io import BytesIO
 
 import click
 import numpy as np
-import requests
 from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
@@ -107,10 +104,24 @@ class BinxGenerator(Generator):
 
 
 class XebiaGenerator(Generator):
+    """General content padding"""
+
+    __PADDING = 50
+
+    """ Author first and last name """
+    __AUTHOR_BLOCK = {"x": __PADDING, "y": __PADDING + 90}
+
+    """ Gravatar block """
+    __PROFILE_PIC = {
+        "size": 120,
+        "x": __PADDING,
+        "y": __PADDING + 120,  # offset by size
+    }
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.medium_font = "proximanova-medium.ttf"
-        self.bold_font = "proximanova-bold.ttf"
+        self.medium_font = "SuisseIntl-Regular.ttf"
+        self.bold_font = "SuisseIntl-Medium.ttf"
         self.logo = Image.open(os.path.join(data_dir, "images", "xebia-logo-white.png"))
 
         self.profile_mask = Image.open(
@@ -120,13 +131,7 @@ class XebiaGenerator(Generator):
             self.email, self.profile_mask.size[0]
         )
         self.overlay = Image.open(
-            os.path.join(
-                data_dir,
-                "images",
-                "xebia-overlay-purple.png"
-                if self.profile_picture
-                else "xebia-overlay-purple-no-picture.png",
-            )
+            os.path.join(data_dir, "images", "xebia-overlay-dark-purple.png")
         )
 
     def _mask(self, img):
@@ -137,10 +142,10 @@ class XebiaGenerator(Generator):
         return result
 
     def _write_title(self, img):
-        x, y = (75, 140)
+        x, y = (self.__PADDING, 160)
         draw = ImageDraw.Draw(img)
-        font = ImageFont.truetype(os.path.join(data_dir, "fonts", self.bold_font), 50)
-        _, _, width, height = font.getbbox(self.title)
+        font = ImageFont.truetype(os.path.join(data_dir, "fonts", self.bold_font), 48)
+        _, _, _, height = font.getbbox(self.title)
         lines = textwrap.wrap(self.title, width=23)
         for line in lines:
             draw.text((x, y), line, font=font, fill=(255, 255, 255))
@@ -156,23 +161,20 @@ class XebiaGenerator(Generator):
         return result
 
     def _write_author(self, img):
-        width, height = img.size
+        _, height = img.size
         draw = ImageDraw.Draw(img)
-        font = ImageFont.truetype(os.path.join(data_dir, "fonts", self.medium_font), 36)
-        ascent, descent = font.getmetrics()
+        font = ImageFont.truetype(os.path.join(data_dir, "fonts", self.medium_font), 26)
+        _, descent = font.getmetrics()
         first_name = self.author.split()[0]
         last_name = " ".join(self.author.split()[1:])
         text_height = font.getmask(self.author).getbbox()[3] + descent
-        position = (
-            (width - 320, height - 170)
-            if self.profile_picture
-            else (
-                width - self.max_text_width(font, [first_name, last_name]) - 32,
-                height - 170,
-            )
-        )
+
+        position = [self.__AUTHOR_BLOCK["x"], height - self.__AUTHOR_BLOCK["y"]]
+        if self.profile_picture:
+            position[0] += self.__PROFILE_PIC["size"] + 20
+
         draw.text(
-            position,
+            tuple(position),
             first_name,
             font=font,
             fill=(255, 255, 255),
@@ -195,10 +197,16 @@ class XebiaGenerator(Generator):
         rgb = np.array(self.profile_picture)
         opacity = np.array(self.profile_mask)
         image_array = np.dstack((rgb, opacity))
-        final_image = Image.fromarray(image_array).resize(size=(170, 170))
+        final_image = Image.fromarray(image_array).resize(
+            size=(self.__PROFILE_PIC["size"], self.__PROFILE_PIC["size"])
+        )
 
-        x, y = img.size
-        img.paste(final_image, (x - 532, y - 218), final_image)
+        _, y = img.size
+        img.paste(
+            final_image,
+            (self.__PROFILE_PIC["x"], y - self.__PROFILE_PIC["y"]),
+            final_image,
+        )
 
     def generate(
         self,
