@@ -15,7 +15,7 @@ jobs:
       - name: checkout
         run: git fetch --prune --unshallow
       - name: install environment
-        run: pip install pipenv && pipenv sync -d 
+        run: pip install pipenv setuptools build && pipenv sync -d
       - name: build
         run: pipenv run make dist
       - name: upload to pypi

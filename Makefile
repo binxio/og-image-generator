@@ -8,14 +8,12 @@ help:           ## Show this help.
 pre-build:
 	rm -rf build/*
 	find src -type d -name \*.egg-info | xargs rm -rf
-	pipenv run python setup.py check
-	pipenv run python setup.py build
 
 .PHONY: upload-dist dist pre-build clean test
 
 dist: pre-build		## create package for upload
 	rm -rf dist/*
-	pipenv run python setup.py sdist
+	pipenv run python -m build
 
 upload-dist: dist		## to pypi
 	pipenv run twine upload dist/*

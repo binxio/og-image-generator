@@ -1,3 +1,53 @@
 [build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta:__legacy__"
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "binx-og-image-generator"
+version = "1.3.1"
+description = "generates og image for xebia.com and binx.io blog"
+readme = "README.md"
+authors = [
+    { name = "Mark van Holsteijn", email = "mark@binx.io" }
+]
+license = { text = "restricted" }
+# license = "restricted"  # Can use this with setuptools >= 77.0.0
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: POSIX",
+    "Operating System :: MacOS",
+    "Operating System :: Unix",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "click",
+    "pillow",
+    "requests",
+]
+
+[project.urls]
+Homepage = "https://github.com/binxio/og-image-generator"
+
+[project.scripts]
+binx-og-image-generator = "binx_og_image_generator.__main__:main"
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-runner",
+]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+zip-safe = false
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+binx_og_image_generator = ["fonts/*", "images/*"]
