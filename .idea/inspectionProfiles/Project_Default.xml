@@ -12,5 +12,39 @@
         </value>
       </option>
     </inspection_tool>
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <list>
+          <option value="binx-og-image-generator" />
+          <option value="certifi" />
+          <option value="charset-normalizer" />
+          <option value="click" />
+          <option value="idna" />
+          <option value="pillow" />
+          <option value="requests" />
+          <option value="urllib3" />
+          <option value="docutils" />
+          <option value="id" />
+          <option value="iniconfig" />
+          <option value="jaraco.classes" />
+          <option value="jaraco.context" />
+          <option value="jaraco.functools" />
+          <option value="keyring" />
+          <option value="markdown-it-py" />
+          <option value="mdurl" />
+          <option value="more-itertools" />
+          <option value="nh3" />
+          <option value="packaging" />
+          <option value="pluggy" />
+          <option value="pygments" />
+          <option value="pytest" />
+          <option value="readme-renderer" />
+          <option value="requests-toolbelt" />
+          <option value="rfc3986" />
+          <option value="rich" />
+          <option value="twine" />
+        </list>
+      </option>
+    </inspection_tool>
   </profile>
 </component>
