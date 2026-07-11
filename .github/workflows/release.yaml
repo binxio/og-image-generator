@@ -7,6 +7,11 @@ jobs:
   build:
     name: release
     runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/og-binx-image-generator
+    permissions:
+      id-token: write
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v1
@@ -19,8 +24,6 @@ jobs:
       - name: build
         run: pipenv run make dist
       - name: upload to pypi
-        uses: pypa/gh-action-pypi-publish@v1.1.0
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          user: __token__
-          password: ${{secrets.TWINE_PASSWORD }}
           packages_dir: dist/
