@@ -10,8 +10,7 @@ jobs:
     environment:
       name: pypi
       url: https://pypi.org/p/og-binx-image-generator
-    permissions:
-      id-token: write
+    if: github.event.base_ref == 'refs/heads/master' || github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v1
