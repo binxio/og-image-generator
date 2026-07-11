@@ -42,6 +42,11 @@ test = [
     "pytest-runner",
 ]
 
+dev = [
+  "twine",
+  "build",
+]
+
 [tool.setuptools]
 package-dir = { "" = "src" }
 zip-safe = false
