@@ -55,4 +55,4 @@ zip-safe = false
 where = ["src"]
 
 [tool.setuptools.package-data]
-binx_og_image_generator = ["fonts/*", "images/*"]
+binx_og_image_generator = ["fonts/**", "images/*"]
