@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "binx-og-image-generator"
-version = "1.3.2"
+version = "1.3.3"
 description = "generates og image for xebia.com and binx.io blog"
 readme = "README.md"
 authors = [
