@@ -1,41 +1,43 @@
 """
 The binx.io og image generator
 """
+
 from setuptools import find_packages, setup
 
-dependencies = ['click', 'pillow', 'requests', 'numpy']
+dependencies = ["click", "pillow", "requests"]
 
 from os import path
+
 this_directory = path.abspath(path.dirname(__file__))
-with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+with open(path.join(this_directory, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
-    name='binx-og-image-generator',
+    name="binx-og-image-generator",
     version="1.2.6",
-    url='https://github.com/binxio/og-image-generator',
+    url="https://github.com/binxio/og-image-generator",
     license="restricted",
-    author='Mark van Holsteijn',
-    author_email='mark@binx.io',
-    description='generates og image for xebia.com and binx.io blog',
+    author="Mark van Holsteijn",
+    author_email="mark@binx.io",
+    description="generates og image for xebia.com and binx.io blog",
     long_description=long_description,
-    long_description_content_type='text/markdown',
-    package_dir={'': 'src'},
-    packages=find_packages(where='src'),
+    long_description_content_type="text/markdown",
+    package_dir={"": "src"},
+    packages=find_packages(where="src"),
     package_data={
         # If any package contains .png or .ttf file,include them
         "binx_og_image_generator": ["fonts/*", "images/*"],
     },
-    #include_package_data = True, # does not work if you set it.
+    # include_package_data = True, # does not work if you set it.
     zip_safe=False,
-    platforms='any',
+    platforms="any",
     install_requires=dependencies,
-    setup_requires=['twine>=4.0.0'],
-    tests_require=dependencies +  ['pytest', 'pytest-runner'],
-    test_suite='tests',
+    setup_requires=["twine>=4.0.0"],
+    tests_require=dependencies + ["pytest", "pytest-runner"],
+    test_suite="tests",
     entry_points={
-        'console_scripts': [
-            'binx-og-image-generator = binx_og_image_generator.__main__:main'
+        "console_scripts": [
+            "binx-og-image-generator = binx_og_image_generator.__main__:main"
         ],
     },
     classifiers=[
@@ -43,18 +45,18 @@ setup(
         # 'Development Status :: 1 - Planning',
         # 'Development Status :: 2 - Pre-Alpha',
         # 'Development Status :: 3 - Alpha',
-        'Development Status :: 4 - Beta',
+        "Development Status :: 4 - Beta",
         #'Development Status :: 5 - Production/Stable',
         # 'Development Status :: 6 - Mature',
         # 'Development Status :: 7 - Inactive',
-        'Environment :: Console',
-        'Intended Audience :: Developers',
-        'Operating System :: POSIX',
-        'Operating System :: MacOS',
-        'Operating System :: Unix',
-        'Operating System :: Microsoft :: Windows',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 3',
-        'Topic :: Software Development :: Libraries :: Python Modules',
-    ]
+        "Environment :: Console",
+        "Intended Audience :: Developers",
+        "Operating System :: POSIX",
+        "Operating System :: MacOS",
+        "Operating System :: Unix",
+        "Operating System :: Microsoft :: Windows",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+    ],
 )

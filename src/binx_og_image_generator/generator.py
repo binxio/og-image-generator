@@ -1,18 +1,14 @@
-import hashlib
 import os
 import textwrap
 from collections import namedtuple
-from io import BytesIO
+import typing
 
 import click
-import numpy as np
-import requests
-from PIL import Image
-from PIL import ImageDraw
-from PIL import ImageFont
+from PIL import Image, ImageDraw, ImageFont
 
 from binx_og_image_generator.logger import log
 from binx_og_image_generator.gravatar import load_profile_picture
+from binx_og_image_generator.themes import Theme, THEMES
 
 data_dir = os.path.dirname(__file__)
 
@@ -26,7 +22,7 @@ class Generator:
         title: str,
         subtitle: str,
         gradient_magnitude: float = 0.85,
-        email: str = None,
+        email: str | None = None,
     ):
         self.medium_font = "Ubuntu-M.ttf"
         self.bold_font = "Ubuntu-B.ttf"
@@ -107,112 +103,173 @@ class BinxGenerator(Generator):
 
 
 class XebiaGenerator(Generator):
-    def __init__(self, **kwargs):
+    """Generates OpenGraph banner with Xebia branding"""
+
+    """General content padding"""
+    __PADDING = 40
+
+    """Logo area width"""
+    __LOGO_WIDTH = 100
+
+    """Gravatar block """
+    __PROFILE_PIC_WIDTH = 100
+
+    """Author block with optional Gravatar"""
+    __AUTHOR_BLOCK = {"x": __PADDING, "y": __PADDING}
+
+    def __init__(self, *, theme: Theme, **kwargs):
+        """ """
         super().__init__(**kwargs)
-        self.medium_font = "proximanova-medium.ttf"
-        self.bold_font = "proximanova-bold.ttf"
-        self.logo = Image.open(os.path.join(data_dir, "images", "xebia-logo-white.png"))
+
+        self.theme = theme
+
+        self._image_mask = Image.open(theme.banner_mask).convert("L")
+        self._profile_mask = Image.open(theme.profile_mask).convert("L")
 
         self.profile_mask = Image.open(
             os.path.join(data_dir, "images", "profile-mask.png")
         ).convert("L")
-        self.profile_picture = load_profile_picture(
-            self.email, self.profile_mask.size[0]
-        )
-        self.overlay = Image.open(
-            os.path.join(
-                data_dir,
-                "images",
-                "xebia-overlay-purple.png"
-                if self.profile_picture
-                else "xebia-overlay-purple-no-picture.png",
-            )
+
+        [profile_width, _] = self._profile_mask.size
+        self.profile_picture: Image.Image | None = load_profile_picture(
+            self.email, profile_width
         )
 
-    def _mask(self, img):
-        width, height = img.size
-        result = Image.new("RGB", (width, height))
-        result.paste(img.convert("RGB"), (int(width / 3), 0))
-        result.paste(self.overlay, (0, 0), self.overlay)
-        return result
+    def generate(self, img):
+        """ """
 
-    def _write_title(self, img):
-        x, y = (75, 140)
-        draw = ImageDraw.Draw(img)
-        font = ImageFont.truetype(os.path.join(data_dir, "fonts", self.bold_font), 50)
-        _, _, width, height = font.getbbox(self.title)
-        lines = textwrap.wrap(self.title, width=23)
-        for line in lines:
-            draw.text((x, y), line, font=font, fill=(255, 255, 255))
-            y += height
+        self.__result = Image.new("RGB", img.size, self.theme.background_color)
 
-    @staticmethod
-    def max_text_width(font, lines: [str]):
-        result = 0
-        for line in lines:
-            bbox = font.getmask(line).getbbox()
-            width = bbox[2] - bbox[0]
-            result = max(result, width)
-        return result
+        canvas = ImageDraw.Draw(self.__result)
+        title_position = self.__render_author(canvas)
+        self.__write_title(canvas, title_position)
+        self.__render_footer(canvas)
+        self.__paste_image(img)
 
-    def _write_author(self, img):
-        width, height = img.size
-        draw = ImageDraw.Draw(img)
-        font = ImageFont.truetype(os.path.join(data_dir, "fonts", self.medium_font), 36)
-        ascent, descent = font.getmetrics()
+        return self.__result
+
+    @property
+    def content_block_width(self) -> int:
+        """ """
+        [w, _] = self.__result.size
+        [mask_w, _] = self._image_mask.size
+        return int(w - mask_w - self.__PADDING * 1.75)
+
+    def __render_author(self, canvas: ImageDraw.ImageDraw) -> typing.Tuple[int, int]:
+        """Renders blog post author block with optinal Gravatar image
+
+        Returns a tuple with coordinates to render next block
+        """
+
+        font = ImageFont.truetype(self.theme.normal_font, 26)
+        _, descent = font.getmetrics()
         first_name = self.author.split()[0]
         last_name = " ".join(self.author.split()[1:])
         text_height = font.getmask(self.author).getbbox()[3] + descent
-        position = (
-            (width - 320, height - 170)
-            if self.profile_picture
-            else (
-                width - self.max_text_width(font, [first_name, last_name]) - 32,
-                height - 170,
+
+        xy = self.__AUTHOR_BLOCK.copy()
+
+        if self.profile_picture:
+            self.__result.paste(
+                self.profile_picture.resize(
+                    size=(self.__PROFILE_PIC_WIDTH, self.__PROFILE_PIC_WIDTH)
+                ),
+                (xy["x"], xy["y"]),
+                self._profile_mask,
             )
-        )
-        draw.text(
-            position,
-            first_name,
-            font=font,
-            fill=(255, 255, 255),
+
+            xy["x"] += int(self.__PROFILE_PIC_WIDTH + self.__PADDING * 0.5)
+            xy["y"] += int(self.__PROFILE_PIC_WIDTH * 0.5 - text_height)
+
+        first_name = self.author.split()[0]
+        last_name = " ".join(self.author.split()[1:])
+        text_height = font.getmask(self.author).getbbox()[3] + descent
+
+        canvas.text(
+            (xy["x"], xy["y"]), first_name, font=font, fill=self.theme.text_color
         )
 
-        draw.text(
-            (position[0], position[1] + text_height),
+        canvas.text(
+            (xy["x"], xy["y"] + text_height),
             last_name,
             font=font,
-            fill=(255, 255, 255),
+            fill=self.theme.text_color,
         )
 
-    def _add_profile_picture(self, img):
-        """
-        adds the profile picture in the shape of self.profile_mask
-        """
-        if not self.profile_picture:
-            return
+        sx = self.__AUTHOR_BLOCK["x"]
+        sy = self.__PROFILE_PIC_WIDTH + self.__PADDING * 1.5
+        ex = self.content_block_width
+        canvas.line(xy=(sx, sy, ex, sy), fill=self.theme.border_color, width=1)
 
-        rgb = np.array(self.profile_picture)
-        opacity = np.array(self.profile_mask)
-        image_array = np.dstack((rgb, opacity))
-        final_image = Image.fromarray(image_array).resize(size=(170, 170))
+        return (self.__PADDING, int(self.__PROFILE_PIC_WIDTH + self.__PADDING * 2.25))
 
-        x, y = img.size
-        img.paste(final_image, (x - 532, y - 218), final_image)
+    def __write_title(self, canvas, position):
+        """ """
+        x, y = position
+        font = ImageFont.truetype(self.theme.bold_font, 48)
+        _, _, _, height = font.getbbox(self.title)
+        lines = textwrap.wrap(self.title, width=25)
+        for line in lines:
+            canvas.text((x, y), line, font=font, fill=self.theme.text_color)
+            y += height * 1.25
 
-    def generate(
-        self,
-        img,
-    ):
-        img = self._mask(img)
-        self._write_title(img)
-        self._write_author(img)
-        self._add_profile_picture(img)
+    def __render_footer(self, canvas: ImageDraw.ImageDraw):
+        """Renders footer with deviders, logo and brand moto"""
 
-        return img
+        [_, h] = self.__result.size
+        [logo_w, logo_h] = self.__paste_logo()
+
+        # Line, to the right from the logo
+        sx = self.__LOGO_WIDTH + self.__PADDING * 1.5
+        sy = h - logo_h - self.__PADDING
+        ey = h - self.__PADDING
+        canvas.line([sx, sy, sx, ey], self.theme.border_color, 1)
+
+        # Line, above the logo
+        sx = self.__PADDING
+        sy = int(h - logo_h - self.__PADDING * 1.5)
+        ex = self.content_block_width
+        canvas.line([sx, sy, ex, sy], self.theme.border_color, 1)
+
+        # Text
+        font = ImageFont.truetype(self.theme.bold_font, 16)
+        x = logo_w + self.__PADDING * 2
+        y = h - self.__PADDING - logo_h * 0.65
+        canvas.text(
+            xy=(x, y),
+            text="Shaping Tomorrow with AI Today",
+            font=font,
+            fill=self.theme.text_color,
+        )
+
+    def __paste_image(self, img):
+        """Pastes post image into the resulting banner"""
+
+        [w, _] = img.size
+        [crop_w, crop_h] = self._image_mask.size
+        paste_x = w - crop_w - self.__PADDING
+        self.__result.paste(
+            img.crop((0, 0, crop_w, crop_h)),
+            (paste_x, self.__PADDING),
+            self._image_mask,
+        )
+
+    def __paste_logo(self) -> typing.Tuple[int, int]:
+        """ """
+
+        [_, h] = self.__result.size
+
+        logo = Image.open(self.theme.logo).convert("RGBA")
+        [logo_w, logo_h] = logo.size
+        resize_h = int(logo_h * self.__LOGO_WIDTH / logo_w)
+
+        logo = logo.resize((self.__LOGO_WIDTH, resize_h), Image.Resampling.BOX)
+        self.__result.paste(logo, (self.__PADDING, h - self.__PADDING - resize_h), logo)
+
+        return (self.__LOGO_WIDTH, resize_h)
 
 
-def resize_image(image: Image) -> Image:
+def resize_image(image: Image.Image) -> Image.Image:
     """
     resize the image to be the perfect og image size: 1200x630px
     """
@@ -250,6 +307,7 @@ def generate(
     overwrite: bool = False,
     gradient_magnitude: float = 0.9,
     brand: str = "xebia.com",
+    theme: str = "xebia-dark",
 ):
     kwargs = {
         "title": blog.title,
@@ -257,6 +315,7 @@ def generate(
         "email": blog.email,
         "author": blog.author,
         "gradient_magnitude": gradient_magnitude,
+        "theme": THEMES[theme],
     }
     if brand == "binx.io":
         generator = BinxGenerator(**kwargs)
@@ -303,23 +362,22 @@ def generate(
     default="xebia.com",
     help="of the blog",
 )
+@click.option("--theme", type=str, default="xebia-dark", help="of the Xebia branding")
 @click.argument("image", type=click.Path(dir_okay=False, exists=True), nargs=1)
 def main(
-    title, subtitle, author, email, output, image, overwrite, gradient_magnitude, brand
+    title,
+    subtitle,
+    author,
+    email,
+    output,
+    image,
+    overwrite,
+    gradient_magnitude,
+    brand,
+    theme,
 ):
     overwrite = overwrite or output
     blog = Blog(title, subtitle, author, email)
-    kwargs = {
-        "title": title,
-        "subtitle": subtitle,
-        "email": email,
-        "author": author,
-        "gradient_magnitude": gradient_magnitude,
-    }
-    if brand == "binx.io":
-        generator = BinxGenerator(**kwargs)
-    else:
-        generator = XebiaGenerator(**kwargs)
 
     generate(
         blog,
@@ -328,4 +386,5 @@ def main(
         overwrite=overwrite,
         gradient_magnitude=gradient_magnitude,
         brand=brand,
+        theme=theme,
     )
