@@ -274,28 +274,23 @@ def resize_image(image: Image.Image) -> Image.Image:
     resize the image to be the perfect og image size: 1200x630px
     """
     width, height = image.size
-    if width != 1200:
+    if height < 630:
+        log.info("resizing to maximum height of 630px")
+        new_width = int(width * (630 / height))
+        image = image.resize((width, 630))
+        width, height = image.size
+
+    if width < 1200:
         new_height = int(height * 1200 / width)
         log.info("resizing %dx%d to %dx%d", width, height, 1200, new_height)
         image = image.resize((1200, new_height))
         width, height = image.size
 
-    if height > 630:
-        log.info("cropping to maximum height of 630px")
+    if height > 630 or width > 1200:
+        log.info("cropping %dx%d to 1200x630", width, height)
         top = int((height - 630) / 2)
-        bottom = 630 + top
-        image = image.crop((0, top, 1200, bottom))
-        width, height = image.size
-
-    if height < 630:
-        log.info(
-            "resizing %dx%d to 1200x630, ratio match %d%%",
-            width,
-            height,
-            int((width / height) / (1200 / 630) * 100),
-        )
-
-        image = image.resize((1200, 630))
+        left = int(width - 1200/ 2)
+        image = image.crop((left, top, left+1200, top+630))
 
     return image
 
